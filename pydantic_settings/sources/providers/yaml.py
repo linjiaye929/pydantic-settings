@@ -58,6 +58,7 @@ class YamlConfigSettingsSource(InitSettingsSource, ConfigFileSourceMixin):
             if yaml_config_section is not None
             else settings_cls.model_config.get('yaml_config_section')
         )
+        self._case_insensitive_file_keys = self._get_case_insensitive_field_names(settings_cls)
         self.yaml_data = self._read_files(self.yaml_file_path, deep_merge=deep_merge)
 
         if self.yaml_config_section is not None:
@@ -77,6 +78,11 @@ class YamlConfigSettingsSource(InitSettingsSource, ConfigFileSourceMixin):
                 )
             self.yaml_data = section_data
         super().__init__(settings_cls, self.yaml_data, _init_state=_init_state)
+
+    def _get_config_section(self, data: dict[str, Any]) -> Any:
+        if self.yaml_config_section is None:
+            return data
+        return self._traverse_nested_section(data, self.yaml_config_section)
 
     def _read_file(self, file_path: Path | Traversable) -> dict[str, Any]:
         import_yaml()
